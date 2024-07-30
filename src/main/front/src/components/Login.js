@@ -16,6 +16,9 @@ const Login = () => {
             password
         };
 
+        // 요청 로그 출력
+        console.log('Submitting login form:', requestBody);
+
         try {
             const response = await fetch('http://localhost:8080/login', {
                 method: 'POST',
@@ -23,22 +26,23 @@ const Login = () => {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(requestBody),
-                credentials: 'include'  // credentials 옵션 설정
+                credentials: 'include'
             });
 
+            // 응답 로그 출력
             console.log('Response received:', response);
 
             if (response.ok) {
                 const data = await response.json();
                 console.log('Login successful:', data);
                 alert('로그인에 성공했습니다.');
-                // 성공 처리, 예: 페이지 이동 또는 토큰 저장
-                // window.location.href = '/home'; // 예시: 홈 페이지로 이동
             } else if (response.status === 401) {
                 const errorData = await response.json();
+                console.log('Login failed:', errorData);
                 setErrorMessage(errorData.message || '잘못된 자격 증명입니다.');
             } else {
                 const errorData = await response.json();
+                console.log('Login error:', errorData);
                 setErrorMessage(errorData.message || '알 수 없는 오류가 발생했습니다.');
             }
         } catch (error) {

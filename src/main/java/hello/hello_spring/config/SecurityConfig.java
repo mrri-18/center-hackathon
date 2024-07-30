@@ -1,5 +1,6 @@
 package hello.hello_spring.config;
 
+import hello.hello_spring.security.CustomAuthProvider;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,9 +22,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -46,7 +44,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers("/login").permitAll()
@@ -54,6 +51,9 @@ public class SecurityConfig {
                         .anyRequest().permitAll()
                 )
                 .formLogin(formLogin -> formLogin
+                        .loginPage("/login")
+                        .usernameParameter("email") // 이메일을 사용자 이름으로 사용
+                        .passwordParameter("password")
                         .loginProcessingUrl("/login")
                         .successHandler(authenticationSuccessHandler())
                         .failureHandler(authenticationFailureHandler())
@@ -67,7 +67,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager() throws Exception {
         return new ProviderManager(Collections.singletonList(new CustomAuthProvider(userDetailsService, passwordEncoder())));
     }
 
@@ -97,22 +97,5 @@ public class SecurityConfig {
                 response.getWriter().flush();
             }
         };
-    }
-
-    @Bean
-    public UrlBasedCorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("http://localhost:3000");
-        configuration.addAllowedMethod("*");
-        configuration.addAllowedHeader("*");
-        configuration.setAllowCredentials(true);
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
-
-    @Bean
-    public CorsFilter corsFilter() {
-        return new CorsFilter(corsConfigurationSource());
     }
 }
