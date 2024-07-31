@@ -2,12 +2,12 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 
 import Login from './components/Login';
-import Signup from './components/Signup';
-import ForgotPassword from './components/ForgotPassword';
-import WorkTimeTracker from './components/WorkTimeTracker';
-import WorkTimeChart from './components/WorkTimeChart';
-
+import WorkTimeTracker from "./components/WorkTimeTracker";
+import WorkTimeChart from "./components/WorkTimeChart";
+import Signup from "./components/Signup";
+import ForgotPassword from "./components/ForgotPassword";
 import './App.css';
+
 
 function App() {
     return (
@@ -25,7 +25,7 @@ function App() {
                             <Link to="/signup">Signup</Link>
                         </li>
                         <li>
-                            <Link to="/forgotPassword">Forgot Password</Link>
+                            <Link to="/reset">Forgot Password</Link>
                         </li>
                         <li>
                             <Link to="/login">Login</Link>
@@ -33,11 +33,11 @@ function App() {
                     </ul>
                 </nav>
                 <Routes>
+                    <Route path="/login" element={<Login />} />
                     <Route path="/" element={<WorkTimeTracker />} />
                     <Route path="/charts" element={<WorkTimeChart />} />
                     <Route path="/signup" element={<Signup />} />
-                    <Route path="/forgotPassword" element={<ForgotPassword />} />
-                    <Route path="/login" element={<Login />} />
+                    <Route path="/reset" element={<ForgotPassword/>} />
                 </Routes>
             </div>
         </Router>

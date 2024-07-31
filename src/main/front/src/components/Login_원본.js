@@ -7,41 +7,12 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-        setErrorMessage('');
 
-        const requestBody = {
-            username: email,  // Spring Security에서 요구하는 필드명으로 변경
-            password: password
-        };
-
-        try {
-            const response = await fetch('http://localhost:8080/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: new URLSearchParams(requestBody),
-                credentials: 'include' // 필요한 경우 쿠키를 포함시키기
-            });
-
-            if (response.ok) {
-                console.log('Login successful');
-                window.location.href = '/';
-            } else {
-                // 로그인 실패 시 에러 처리
-                if (response.status === 401) {
-                    setErrorMessage('Invalid credentials. Please try again.');
-                } else {
-                    const errorData = await response.json();
-                    setErrorMessage(errorData.message || 'Login failed. Please try again.');
-                }
-            }
-        } catch (error) {
-            console.error('Login error:', error);
-            setErrorMessage('An unknown error occurred.');
-        }
+        // 로그인 폼 데이터를 로컬에서 처리하지 않고, form 요소의 기본 동작을 통해 서버로 전송
+        // Spring Security가 이를 처리하게 함
+        document.getElementById("login-form").submit();
     };
 
     return (
@@ -49,10 +20,11 @@ const Login = () => {
             <main className="login-main">
                 <div className="login-container">
                     <h3>(서비스 이름)에 로그인 하세요</h3>
-                    <form className="login-form" onSubmit={handleSubmit}>
+                    <form id="login-form" action="http://localhost:8080/login" method="POST" className="login-form" onSubmit={handleSubmit}>
                         <div className="input-container">
                             <input
                                 type="email"
+                                name="username" // Spring Security 기본 요구 사항에 맞춰 필드 이름 변경
                                 placeholder="아이디"
                                 className="login-input"
                                 value={email}
@@ -62,6 +34,7 @@ const Login = () => {
                         <div className="input-container">
                             <input
                                 type="password"
+                                name="password" // Spring Security 기본 요구 사항에 맞춰 필드 이름 변경
                                 placeholder="비밀번호"
                                 className="login-input"
                                 value={password}

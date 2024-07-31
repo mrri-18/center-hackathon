@@ -61,25 +61,25 @@ public class UserController {
         return "user/login";
     }
 
-    @PostMapping("/login")
-    @ResponseBody
-    public ResponseEntity<?> loginUser(@RequestBody Map<String, String> loginRequest) {
-        try {
-            UsernamePasswordAuthenticationToken authenticationToken =
-                    new UsernamePasswordAuthenticationToken(loginRequest.get("email"), loginRequest.get("password"));
-
-            Authentication authentication = authenticationManager.authenticate(authenticationToken);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Login successful");
-            return ResponseEntity.ok().body(response);
-        } catch (AuthenticationException e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Login failed");
-            return ResponseEntity.status(401).body(response);
-        }
-    }
+//    @PostMapping("/login")
+//    @ResponseBody
+//    public ResponseEntity<?> loginUser(@RequestBody Map<String, String> loginRequest) {
+//        try {
+//            UsernamePasswordAuthenticationToken authenticationToken =
+//                    new UsernamePasswordAuthenticationToken(loginRequest.get("email"), loginRequest.get("password"));
+//
+//            Authentication authentication = authenticationManager.authenticate(authenticationToken);
+//            SecurityContextHolder.getContext().setAuthentication(authentication);
+//
+//            Map<String, String> response = new HashMap<>();
+//            response.put("message", "Login successful");
+//            return ResponseEntity.ok().body(response);
+//        } catch (AuthenticationException e) {
+//            Map<String, String> response = new HashMap<>();
+//            response.put("message", "Login failed");
+//            return ResponseEntity.status(401).body(response);
+//        }
+//    }
 
     @GetMapping("/reset")
     public String resetPassword(Model model) {

@@ -22,80 +22,152 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.CorsUtils;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
-    private final UserDetailsService userDetailsService;
-
-    public SecurityConfig(@Qualifier("userSecurityService") UserDetailsService userDetailsService) {
-        this.userDetailsService = userDetailsService;
-    }
-
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }
-
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
+
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/login").permitAll()
+                        .requestMatchers("/").permitAll()
+                        .requestMatchers("/login").anonymous()
                         .requestMatchers("/logout").authenticated()
+                        .requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
                         .anyRequest().permitAll()
                 )
-                .formLogin(formLogin -> formLogin
+
+                .formLogin((formLogin)-> formLogin
                         .loginPage("/login")
-                        .usernameParameter("email") // 이메일을 사용자 이름으로 사용
-                        .passwordParameter("password")
-                        .loginProcessingUrl("/login")
-                        .successHandler(authenticationSuccessHandler())
-                        .failureHandler(authenticationFailureHandler())
-                )
-                .logout(logout -> logout
+                        .defaultSuccessUrl("/")
+                        .failureUrl("/login?error=true"))
+
+                .logout((logout)->logout
                         .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
                         .logoutSuccessUrl("/")
-                        .invalidateHttpSession(true));
+                        .invalidateHttpSession(true))  //생성된 사용자 세션 삭제
+                .csrf(AbstractHttpConfigurer::disable);
 
         return http.build();
     }
-
     @Bean
-    public AuthenticationManager authenticationManager() throws Exception {
-        return new ProviderManager(Collections.singletonList(new CustomAuthProvider(userDetailsService, passwordEncoder())));
+    AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception{
+        return authenticationConfiguration.getAuthenticationManager();
     }
-
     @Bean
-    public AuthenticationSuccessHandler authenticationSuccessHandler() {
-        return new AuthenticationSuccessHandler() {
-            @Override
-            public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                                Authentication authentication) throws IOException, ServletException {
-                response.setStatus(HttpServletResponse.SC_OK);
-                response.setContentType("application/json");
-                response.getWriter().write("{\"message\": \"Login successful\"}");
-                response.getWriter().flush();
-            }
-        };
-    }
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
 
-    @Bean
-    public AuthenticationFailureHandler authenticationFailureHandler() {
-        return new AuthenticationFailureHandler() {
-            @Override
-            public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
-                                                AuthenticationException exception) throws IOException, ServletException {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType("application/json");
-                response.getWriter().write("{\"message\": \"Login failed\"}");
-                response.getWriter().flush();
-            }
-        };
+        config.setAllowCredentials(true);
+        config.setAllowedOrigins(Arrays.asList("http://localhost:3001"));
+        config.setAllowedMethods(Arrays.asList("HEAD","POST","GET","DELETE","PUT"));
+        config.setAllowedHeaders(Arrays.asList("*"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 }
+
+
+//
+//    private final UserDetailsService userDetailsService;
+//
+//    public SecurityConfig(@Qualifier("userSecurityService") UserDetailsService userDetailsService) {
+//        this.userDetailsService = userDetailsService;
+//    }
+//
+//    @Bean
+//    public PasswordEncoder passwordEncoder() {
+//        return new BCryptPasswordEncoder();
+//    }
+//
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+//        http
+//
+//                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+//                .authorizeHttpRequests(requests -> requests
+//                        .requestMatchers("/login").permitAll()
+//                        .requestMatchers("/logout").authenticated()
+//                        .requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
+//                        .anyRequest().permitAll()
+//                )
+//                .formLogin(formLogin -> formLogin
+//                        .loginPage("/login")
+////                        .usernameParameter("email") // 이메일을 사용자 이름으로 사용
+////                        .passwordParameter("password")
+//                        .loginProcessingUrl("/")
+////                        .successHandler(authenticationSuccessHandler())
+////                        .failureHandler(authenticationFailureHandler())
+//                        .failureUrl("/login?error=true"))
+//
+//                .logout(logout -> logout
+//                        .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+//                        .logoutSuccessUrl("/")
+//                        .invalidateHttpSession(true))
+//                .csrf(AbstractHttpConfigurer::disable);
+//
+//        return http.build();
+//    }
+//
+//    @Bean
+//    public AuthenticationManager authenticationManager() throws Exception {
+//        return new ProviderManager(Collections.singletonList(new CustomAuthProvider(userDetailsService, passwordEncoder())));
+//    }
+//
+//    @Bean
+//    public AuthenticationSuccessHandler authenticationSuccessHandler() {
+//        return new AuthenticationSuccessHandler() {
+//            @Override
+//            public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+//                                                Authentication authentication) throws IOException, ServletException {
+//                response.setStatus(HttpServletResponse.SC_OK);
+//                response.setContentType("application/json");
+//                response.getWriter().write("{\"message\": \"Login successful\"}");
+//                response.getWriter().flush();
+//            }
+//        };
+//    }
+//    @Bean
+//    public CorsConfigurationSource corsConfigurationSource() {
+//        CorsConfiguration config = new CorsConfiguration();
+//
+//        config.setAllowCredentials(true);
+//        config.setAllowedOrigins(Arrays.asList("http://localhost:3001"));
+//        config.setAllowedMethods(Arrays.asList("HEAD","POST","GET","DELETE","PUT"));
+//        config.setAllowedHeaders(Arrays.asList("*"));
+//
+//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//        source.registerCorsConfiguration("/**", config);
+//        return source;
+//    }
+//
+//    @Bean
+//    public AuthenticationFailureHandler authenticationFailureHandler() {
+//        return new AuthenticationFailureHandler() {
+//            @Override
+//            public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
+//                                                AuthenticationException exception) throws IOException, ServletException {
+//                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//                response.setContentType("application/json");
+//                response.getWriter().write("{\"message\": \"Login failed\"}");
+//                response.getWriter().flush();
+//            }
+//        };
+//    }
+//}
